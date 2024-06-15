@@ -37,7 +37,7 @@ class UserSerializer(serializers.ModelSerializer):
 class ContentItemSerializer(serializers.ModelSerializer):
     categories = serializers.ListField(
         child=serializers.CharField(max_length=100),
-        required=False  # Categories are optional
+        required=False
     )
 
     class Meta:
@@ -45,30 +45,26 @@ class ContentItemSerializer(serializers.ModelSerializer):
         fields = ['id', 'author', 'title', 'body', 'summary', 'categories', 'document', 'created_at', 'updated_at']
 
     def create(self, validated_data):
-        # Pop categories from validated data and join them into a single string
         categories_data = validated_data.pop('categories', [])
         validated_data['categories'] = ','.join(categories_data)
-        # Create the content item with the validated data
         content_item = ContentItem.objects.create(**validated_data)
         return content_item
 
     def update(self, instance, validated_data):
-        # Pop categories from validated data and update instance fields
         categories_data = validated_data.pop('categories', [])
         instance.title = validated_data.get('title', instance.title)
         instance.body = validated_data.get('body', instance.body)
         instance.summary = validated_data.get('summary', instance.summary)
         instance.document = validated_data.get('document', instance.document)
         instance.categories = ','.join(categories_data)
-        # Save the updated instance
         instance.save()
         return instance
 
     def to_representation(self, instance):
-        # Convert categories string back to list for representation
         representation = super().to_representation(instance)
         representation['categories'] = instance.categories.split(',') if instance.categories else []
         return representation
+
 
 # Serializer for searching content items
 class ContentItemSearchSerializer(serializers.Serializer):
